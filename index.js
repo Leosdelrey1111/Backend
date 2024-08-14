@@ -15,8 +15,8 @@ app.use(bodyParser.json());
 const conexion = mysql.createConnection({
     host: 'localhost',
     database: 'estacionamiento',
-    user: 'root2',
-    password: ''
+    user: 'root-e',
+    password: '123456'
 });
 
 app.use(morgan('dev'));
