@@ -2,6 +2,7 @@ const cors = require('cors');
 const express = require('express');
 const mysql = require('mysql');
 const bodyParser = require('body-parser');
+const morgan = require('morgan')
 
 const app = express();
 const port = 3000;
@@ -14,9 +15,11 @@ app.use(bodyParser.json());
 const conexion = mysql.createConnection({
     host: 'localhost',
     database: 'estacionamiento',
-    user: 'root-e',
-    password: '123456'
+    user: 'root2',
+    password: ''
 });
+
+app.use(morgan('dev'));
 
 // Conexión con la base de datos
 conexion.connect(error => {
@@ -32,6 +35,8 @@ app.use('/usuarios', usuarioRoutes);
 const suplierRoutes = require('./routes/suplier');
 app.use('/suplier', suplierRoutes);
 
+const trabajadorRotes = require('./routes/trabajadores'); 
+app.use('/trabajadores', trabajadorRotes);
 
 // Ruta raíz
 app.get('/', (req, res) => {
