@@ -5,15 +5,13 @@ const router = Router();
 
 // Crear un nuevo empleado
 router.post('/', (req, res) => {
-    const { Nombre, CorreoElectronico, Contrasena, Departamento, Cargo, idEmpleado } = req.body;
-    console.log(req.body)
+    const { Nombre, CorreoElectronico, Contrasena, Departamento, Cargo } = req.body;
+    console.log(req.body);
 
-    // Verificar que los campos requeridos estén presentes
     if (!Nombre || !CorreoElectronico || !Contrasena || !Departamento || !Cargo) {
         return res.status(400).json({ error: 'Campos requeridos faltantes' });
     }
 
-    // Insertar primero en la tabla Usuario
     const createUsuarioQuery = 'INSERT INTO Usuario (Nombre, CorreoElectronico, Contrasena, TipoUsuario) VALUES (?, ?, ?, ?)';
     db.query(createUsuarioQuery, [Nombre, CorreoElectronico, Contrasena, 'Empleado'], (err, result) => {
         if (err) {
@@ -21,9 +19,8 @@ router.post('/', (req, res) => {
             return res.status(500).json({ error: 'Error al crear usuario' });
         }
 
-        const idUsuario = result.insertId; // Obtener el ID del usuario insertado
+        const idUsuario = result.insertId;
 
-        // Insertar en la tabla Empleado con el idUsuario obtenido
         const createEmpleadoQuery = 'INSERT INTO Empleado (idUsuario, Cargo, Departamento) VALUES (?, ?, ?)';
         db.query(createEmpleadoQuery, [idUsuario, Cargo, Departamento], (err) => {
             if (err) {
@@ -37,7 +34,7 @@ router.post('/', (req, res) => {
 
 // Obtener todos los empleados
 router.get('/', (req, res) => {
-    const query = 'SELECT * FROM Empleado as e inner join usuario as u on e.idUsuario=u.idUsuario';
+    const query = 'SELECT * FROM Empleado AS e INNER JOIN Usuario AS u ON e.idUsuario = u.idUsuario';
     db.query(query, (err, results) => {
         if (err) {
             console.error(err);
@@ -66,14 +63,12 @@ router.get('/:idEmpleado', (req, res) => {
 // Actualizar un empleado
 router.put('/:idEmpleado', (req, res) => {
     const { idEmpleado } = req.params;
-    const { Cargo, Departamento, Nombre, CorreoElectronico, Contrasena } = req.body; // Include all relevant fields
+    const { Cargo, Departamento, Nombre, CorreoElectronico, Contrasena } = req.body;
 
-    // Check for required fields
     if (!Cargo || !Departamento || !Nombre || !CorreoElectronico || !Contrasena) {
         return res.status(400).json({ error: 'Campos requeridos faltantes' });
     }
 
-    // Update the Usuario table
     const updateUsuarioQuery = `
         UPDATE Usuario
         SET Nombre = ?, CorreoElectronico = ?, Contrasena = ?
@@ -87,7 +82,6 @@ router.put('/:idEmpleado', (req, res) => {
             return res.status(500).json({ error: 'Error al actualizar usuario' });
         }
 
-        // Update the Empleado table
         const updateEmpleadoQuery = `
             UPDATE Empleado
             SET Cargo = ?, Departamento = ?
@@ -103,18 +97,42 @@ router.put('/:idEmpleado', (req, res) => {
     });
 });
 
-
 // Eliminar un empleado por ID
 router.delete('/:idEmpleado', (req, res) => {
     const { idEmpleado } = req.params;
 
-    const deleteEmpleadoQuery = 'DELETE FROM Empleado WHERE idEmpleado = ?';
-    db.query(deleteEmpleadoQuery, [idEmpleado], (err) => {
+    // Primero, obtener el idUsuario asociado al idEmpleado
+    const getUserIdQuery = 'SELECT idUsuario FROM Empleado WHERE idEmpleado = ?';
+    db.query(getUserIdQuery, [idEmpleado], (err, results) => {
         if (err) {
             console.error(err);
-            return res.status(500).json({ error: 'Error al eliminar empleado' });
+            return res.status(500).json({ error: 'Error al obtener el usuario asociado al empleado' });
         }
-        res.status(200).json({ message: 'Empleado eliminado' });
+
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'Empleado no encontrado' });
+        }
+
+        const idUsuario = results[0].idUsuario;
+
+        // Eliminar primero de la tabla Empleado
+        const deleteEmpleadoQuery = 'DELETE FROM Empleado WHERE idEmpleado = ?';
+        db.query(deleteEmpleadoQuery, [idEmpleado], (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ error: 'Error al eliminar empleado' });
+            }
+
+            // Luego eliminar de la tabla Usuario
+            const deleteUserQuery = 'DELETE FROM Usuario WHERE idUsuario = ?';
+            db.query(deleteUserQuery, [idUsuario], (err) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).json({ error: 'Error al eliminar usuario' });
+                }
+                res.status(200).json({ message: 'Empleado y usuario eliminados' });
+            });
+        });
     });
 });
 
