@@ -34,7 +34,7 @@ router.post('/', (req, res) => {
 
 // Obtener todos los empleados
 router.get('/', (req, res) => {
-    const query = 'SELECT * FROM Empleado AS e INNER JOIN Usuario AS u ON e.idUsuario = u.idUsuario';
+    const query = 'SELECT * FROM Empleado AS e INNER JOIN Usuario AS u ON e.idUsuario = u.idUsuario where u.TipoUsuario= "Empleado" ';
     db.query(query, (err, results) => {
         if (err) {
             console.error(err);
