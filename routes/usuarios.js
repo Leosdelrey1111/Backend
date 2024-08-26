@@ -219,7 +219,7 @@ router.delete('/:id', (req, res) => {
 // Ruta para obtener todos los usuarios
 router.get('/all', (req, res) => {
     const query = `
-        SELECT u.idUsuario, u.Nombre, u.CorreoElectronico, u.TipoUsuario,
+        SELECT u.idUsuario, u.Nombre, u.CorreoElectronico, u.TipoUsuario, u.codigo,
                COALESCE(e.controlNumber, p.controlNumber) AS controlNumber,
                COALESCE(e.career, NULL) AS career,
                COALESCE(e.groupo, NULL) AS groupo   
@@ -273,6 +273,7 @@ function generateBarcodeValue(length = 10) {
     }
     return result;
 }
+
 // Ruta para iniciar sesión
 // Ruta para iniciar sesión (ya implementada)
 router.post('/login', (req, res) => {
